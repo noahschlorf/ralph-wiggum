@@ -76,7 +76,7 @@ export class OfferUpScraper extends BaseScraper {
         description: this.extractDescription(),
         price,
         currency: 'USD',
-        condition: this.extractCondition(),
+        condition: this.mapCondition(this.extractCondition()),
         location: this.extractLocation(),
         sellerName: this.extractSeller(),
         sellerRating: undefined, // OfferUp shows ratings but structure varies

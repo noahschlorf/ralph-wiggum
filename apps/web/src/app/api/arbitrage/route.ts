@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma, OpportunityStatus } from '@prisma/client';
 import { prisma } from '../../../lib/prisma';
 import { ArbitrageEngine, PriceSource } from '../../../services/arbitrage/engine';
 import { z } from 'zod';
@@ -30,14 +31,14 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
 
     // Build where clause
-    const where: any = {};
+    const where: Prisma.ArbitrageOpportunityWhereInput = {};
 
     if (minProfitMargin) {
       where.profitMargin = { gte: parseFloat(minProfitMargin) };
     }
 
-    if (status) {
-      where.status = status;
+    if (status && Object.values(OpportunityStatus).includes(status as OpportunityStatus)) {
+      where.status = status as OpportunityStatus;
     }
 
     // Fetch opportunities
@@ -48,7 +49,6 @@ export async function GET(request: NextRequest) {
       take: limit,
       include: {
         sourceListing: true,
-        targetListing: true,
       },
     });
 
@@ -98,14 +98,16 @@ export async function POST(request: NextRequest) {
           in: [...sourceMarketplaces, ...targetMarketplaces] as Marketplace[],
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { scrapedAt: 'desc' },
       take: 1000, // Limit for performance
     });
 
-    // Convert to PriceSource format
-    const sources: PriceSource[] = listings
-      .filter((l: any) => sourceMarketplaces.includes(l.marketplace))
-      .map((l: any) => ({
+    // Convert to PriceSource format with database IDs
+    type PriceSourceWithDbId = PriceSource & { dbId: string };
+
+    const sources: PriceSourceWithDbId[] = listings
+      .filter((l) => (sourceMarketplaces as readonly string[]).includes(l.marketplace))
+      .map((l) => ({
         marketplace: l.marketplace as Marketplace,
         price: l.price,
         listingId: l.externalId,
@@ -113,11 +115,12 @@ export async function POST(request: NextRequest) {
         url: l.listingUrl,
         condition: l.condition || undefined,
         images: l.imageUrls,
+        dbId: l.id,
       }));
 
-    const targets: PriceSource[] = listings
-      .filter((l: any) => targetMarketplaces.includes(l.marketplace))
-      .map((l: any) => ({
+    const targets: PriceSourceWithDbId[] = listings
+      .filter((l) => (targetMarketplaces as readonly string[]).includes(l.marketplace))
+      .map((l) => ({
         marketplace: l.marketplace as Marketplace,
         price: l.price,
         listingId: l.externalId,
@@ -125,6 +128,7 @@ export async function POST(request: NextRequest) {
         url: l.listingUrl,
         condition: l.condition || undefined,
         images: l.imageUrls,
+        dbId: l.id,
       }));
 
     // Find opportunities
@@ -137,21 +141,20 @@ export async function POST(request: NextRequest) {
     // Save results if requested
     if (saveResults && opportunities.length > 0) {
       for (const opp of opportunities) {
+        // Get the database ID from our extended source listing
+        const sourceListingWithDbId = opp.sourceListing as PriceSourceWithDbId;
         await prisma.arbitrageOpportunity.create({
           data: {
-            sourceMarketplace: opp.sourceMarketplace,
+            sourceListingId: sourceListingWithDbId.dbId,
             targetMarketplace: opp.targetMarketplace,
-            sourcePrice: opp.sourcePrice,
-            targetPrice: opp.targetPrice,
-            grossProfit: opp.grossProfit,
-            fees: opp.fees,
+            estimatedSellPrice: opp.targetPrice,
+            purchasePrice: opp.sourcePrice,
+            platformFees: opp.fees,
             shippingCost: opp.shippingCost,
-            netProfit: opp.netProfit,
+            estimatedProfit: opp.netProfit,
             profitMargin: opp.profitMargin,
-            roi: opp.roi,
+            confidence: 0.8, // Default confidence score
             status: 'ACTIVE',
-            sourceListingId: opp.sourceListing.listingId,
-            targetListingId: opp.targetListing.listingId,
           },
         });
       }

@@ -130,10 +130,11 @@ export class KeepaClient {
    */
   async getProduct(asin: string): Promise<KeepaProduct> {
     const products = await this.getProducts([asin]);
-    if (products.length === 0) {
+    const product = products[0];
+    if (!product) {
       throw new Error('Product not found');
     }
-    return products[0];
+    return product;
   }
 
   /**
@@ -153,7 +154,7 @@ export class KeepaClient {
       throw new Error(`Keepa API error: ${response.status} ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as { products?: KeepaProduct[] };
     return data.products ?? [];
   }
 
@@ -225,7 +226,12 @@ export class KeepaClient {
       throw new Error(`Keepa API error: ${response.status}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as {
+      tokensLeft: number;
+      refillIn: number;
+      refillRate?: number;
+      tokenFlowReduction?: number;
+    };
     return {
       tokensLeft: data.tokensLeft,
       refillIn: data.refillIn,
@@ -251,7 +257,7 @@ export class KeepaClient {
       throw new Error(`Keepa API error: ${response.status}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as { asinList?: string[] };
     const asins = (data.asinList ?? []).slice(0, limit);
 
     if (asins.length === 0) return [];

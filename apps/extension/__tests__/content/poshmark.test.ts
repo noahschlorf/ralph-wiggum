@@ -214,7 +214,7 @@ describe('PoshmarkScraper', () => {
       });
     });
 
-    it('should extract NWT condition', () => {
+    it('should extract NWT condition and map to NEW', () => {
       document.body.innerHTML = `
         <h1 data-test="listing-title">New With Tags Dress</h1>
         <span data-test="listing-price">$50</span>
@@ -222,10 +222,10 @@ describe('PoshmarkScraper', () => {
       `;
 
       const listing = scraper.extractListing();
-      expect(listing?.condition).toBe('NWT');
+      expect(listing?.condition).toBe('NEW');
     });
 
-    it('should extract NWOT condition', () => {
+    it('should extract NWOT condition and map to NEW', () => {
       document.body.innerHTML = `
         <h1 data-test="listing-title">New Without Tags Shoes</h1>
         <span data-test="listing-price">$75</span>
@@ -233,7 +233,7 @@ describe('PoshmarkScraper', () => {
       `;
 
       const listing = scraper.extractListing();
-      expect(listing?.condition).toBe('NWOT');
+      expect(listing?.condition).toBe('NEW');
     });
   });
 });

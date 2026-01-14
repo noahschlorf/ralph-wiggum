@@ -82,7 +82,7 @@ export class PoshmarkScraper extends BaseScraper {
         description: this.extractDescription(),
         price,
         currency: 'USD',
-        condition: this.extractCondition(),
+        condition: this.mapCondition(this.extractCondition()),
         location: undefined, // Poshmark doesn't show location publicly
         sellerName: this.extractSeller(),
         sellerRating: undefined,

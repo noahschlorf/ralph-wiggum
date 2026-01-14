@@ -3,7 +3,6 @@
  * Handles communication between content scripts and the SaaS backend
  */
 
-import { Marketplace } from '@arbitrage/shared';
 import type { ScrapedListingMessage, SyncResponse } from '../lib/types';
 
 // API base URL (will be configured via extension settings)
@@ -13,7 +12,7 @@ const API_BASE_URL = 'https://api.arbitrage.app';
  * Handle messages from content scripts
  */
 chrome.runtime.onMessage.addListener(
-  (message: ScrapedListingMessage, sender, sendResponse) => {
+  (message: ScrapedListingMessage, _sender, sendResponse) => {
     if (message.type === 'LISTING_SCRAPED') {
       handleListingScraped(message.payload)
         .then(sendResponse)

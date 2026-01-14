@@ -1,7 +1,5 @@
 'use client';
 
-import { ArbitrageOpportunity, PriceSource } from '@/services/arbitrage/engine';
-
 interface ArbitrageCardProps {
   opportunity: {
     id?: string;

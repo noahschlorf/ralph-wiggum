@@ -233,8 +233,9 @@ export class EbayScraper extends BaseScraper {
     if (ratingText) {
       // Extract percentage like "98.5% positive feedback"
       const match = ratingText.match(/([\d.]+)%/);
-      if (match) {
-        const percentage = parseFloat(match[1]);
+      const percentageStr = match?.[1];
+      if (percentageStr) {
+        const percentage = parseFloat(percentageStr);
         // Convert to 5-star scale (90% = 4.5, 100% = 5)
         return Math.round((percentage / 100) * 5 * 100) / 100;
       }

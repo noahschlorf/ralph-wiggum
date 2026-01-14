@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ArbitrageCard } from '@/components/arbitrage/ArbitrageCard';
+
+type SortOption = 'profitMargin' | 'netProfit' | 'roi';
 
 interface ArbitrageOpportunity {
   id: string;
@@ -32,14 +34,10 @@ export default function DashboardPage() {
   const [analyzing, setAnalyzing] = useState(false);
   const [filters, setFilters] = useState({
     minProfitMargin: 10,
-    sortBy: 'profitMargin' as 'profitMargin' | 'netProfit' | 'roi',
+    sortBy: 'profitMargin' as SortOption,
   });
 
-  useEffect(() => {
-    fetchOpportunities();
-  }, []);
-
-  async function fetchOpportunities() {
+  const fetchOpportunities = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/arbitrage?minProfitMargin=${filters.minProfitMargin}`);
@@ -50,7 +48,11 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [filters.minProfitMargin]);
+
+  useEffect(() => {
+    fetchOpportunities();
+  }, [fetchOpportunities]);
 
   async function analyzeListings() {
     try {
@@ -133,7 +135,7 @@ export default function DashboardPage() {
               <select
                 value={filters.sortBy}
                 onChange={(e) =>
-                  setFilters((f) => ({ ...f, sortBy: e.target.value as any }))
+                  setFilters((f) => ({ ...f, sortBy: e.target.value as SortOption }))
                 }
                 className="mt-1 rounded border-gray-300 shadow-sm"
               >

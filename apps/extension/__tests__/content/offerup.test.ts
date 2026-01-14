@@ -98,7 +98,7 @@ describe('OfferUpScraper', () => {
       expect(listing?.title).toBe('PlayStation 5 Console');
       expect(listing?.price).toBe(450);
       expect(listing?.currency).toBe('USD');
-      expect(listing?.condition).toBe('Like new');
+      expect(listing?.condition).toBe('LIKE_NEW');
       expect(listing?.location).toBe('Seattle, WA');
     });
 

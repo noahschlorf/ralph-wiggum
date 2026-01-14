@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { prisma } from '../../../lib/prisma';
 import { z } from 'zod';
+
+const conditionEnum = ['NEW', 'LIKE_NEW', 'GOOD', 'FAIR', 'POOR'] as const;
 
 // Validation schema for listing creation
 const createListingSchema = z.object({
@@ -10,7 +13,7 @@ const createListingSchema = z.object({
   price: z.number().min(0),
   currency: z.string().default('USD'),
   description: z.string().optional(),
-  condition: z.string().optional(),
+  condition: z.enum(conditionEnum).optional(),
   location: z.string().optional(),
   sellerName: z.string().optional(),
   sellerRating: z.number().optional(),
@@ -35,10 +38,10 @@ export async function GET(request: NextRequest) {
     const maxPrice = searchParams.get('maxPrice');
 
     // Build where clause
-    const where: any = {};
+    const where: Prisma.ScrapedListingWhereInput = {};
 
     if (marketplace) {
-      where.marketplace = marketplace;
+      where.marketplace = marketplace as Prisma.EnumMarketplaceFilter;
     }
 
     if (search) {
@@ -49,15 +52,16 @@ export async function GET(request: NextRequest) {
     }
 
     if (minPrice || maxPrice) {
-      where.price = {};
-      if (minPrice) where.price.gte = parseFloat(minPrice);
-      if (maxPrice) where.price.lte = parseFloat(maxPrice);
+      const priceFilter: Prisma.FloatFilter = {};
+      if (minPrice) priceFilter.gte = parseFloat(minPrice);
+      if (maxPrice) priceFilter.lte = parseFloat(maxPrice);
+      where.price = priceFilter;
     }
 
     // Fetch listings
     const listings = await prisma.scrapedListing.findMany({
       where,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { scrapedAt: 'desc' },
       skip: (page - 1) * limit,
       take: limit,
     });
@@ -98,9 +102,9 @@ export async function POST(request: NextRequest) {
     // Check if listing already exists
     const existing = await prisma.scrapedListing.findUnique({
       where: {
-        marketplace_externalId: {
-          marketplace: data.marketplace,
+        externalId_marketplace: {
           externalId: data.externalId,
+          marketplace: data.marketplace,
         },
       },
     });
@@ -126,6 +130,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Create new listing
+    // TODO: Get userId from auth session
+    const userId = 'system'; // Placeholder for extension scraping
     const listing = await prisma.scrapedListing.create({
       data: {
         externalId: data.externalId,
@@ -140,6 +146,7 @@ export async function POST(request: NextRequest) {
         sellerRating: data.sellerRating,
         imageUrls: data.imageUrls || [],
         listingUrl: data.listingUrl,
+        userId,
       },
     });
 

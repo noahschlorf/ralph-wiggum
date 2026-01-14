@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import type { ExtensionSettings, ExtensionStorage } from '../lib/types';
+import type { ExtensionSettings } from '../lib/types';
 import { DEFAULT_SETTINGS } from '../lib/types';
 
 interface PopupState {

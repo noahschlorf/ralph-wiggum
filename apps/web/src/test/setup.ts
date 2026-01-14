@@ -3,7 +3,7 @@ import { afterEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 
 // Mock environment variables
-process.env.NODE_ENV = 'test';
+// NODE_ENV is set by vitest/vite automatically
 
 // Clean up after each test
 afterEach(() => {

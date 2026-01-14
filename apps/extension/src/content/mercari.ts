@@ -72,7 +72,7 @@ export class MercariScraper extends BaseScraper {
         description: this.extractDescription(),
         price,
         currency: 'USD',
-        condition: this.extractCondition(),
+        condition: this.mapCondition(this.extractCondition()),
         location: undefined, // Mercari doesn't show seller location publicly
         sellerName: this.extractSeller(),
         sellerRating: undefined,

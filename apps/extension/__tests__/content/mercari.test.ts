@@ -88,7 +88,7 @@ describe('MercariScraper', () => {
       expect(listing?.title).toBe('Nintendo Switch OLED');
       expect(listing?.price).toBe(280);
       expect(listing?.currency).toBe('USD');
-      expect(listing?.condition).toBe('Like new');
+      expect(listing?.condition).toBe('LIKE_NEW');
     });
 
     it('should handle missing optional fields gracefully', () => {
@@ -189,11 +189,11 @@ describe('MercariScraper', () => {
     });
 
     const conditionTests = [
-      { input: 'New', expected: 'New' },
-      { input: 'Like new', expected: 'Like new' },
-      { input: 'Good', expected: 'Good' },
-      { input: 'Fair', expected: 'Fair' },
-      { input: 'Poor', expected: 'Poor' },
+      { input: 'New', expected: 'NEW' },
+      { input: 'Like new', expected: 'LIKE_NEW' },
+      { input: 'Good', expected: 'GOOD' },
+      { input: 'Fair', expected: 'FAIR' },
+      { input: 'Poor', expected: 'POOR' },
     ];
 
     conditionTests.forEach(({ input, expected }) => {

@@ -139,8 +139,12 @@ export abstract class BaseScraper {
   protected mapCondition(conditionStr: string | undefined): ListingCondition | undefined {
     if (!conditionStr) return undefined;
 
-    const lower = conditionStr.toLowerCase();
+    const lower = conditionStr.toLowerCase().trim();
 
+    // Poshmark-specific conditions (NWT = New With Tags, NWOT = New Without Tags)
+    if (lower === 'nwt' || lower === 'nwot') {
+      return 'NEW';
+    }
     if (lower.includes('new') && !lower.includes('like')) {
       return 'NEW';
     }
