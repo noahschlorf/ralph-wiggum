@@ -56,7 +56,7 @@ jobs:
         run: pnpm --filter @arbitrage/shared build
 
       - name: Generate Prisma client
-        run: pnpm --filter @arbitrage/web prisma generate
+        run: cd apps/web && npx prisma generate
 
       - name: Run type checking
         run: pnpm type-check --force
@@ -84,7 +84,7 @@ jobs:
         run: pnpm --filter @arbitrage/shared build
 
       - name: Generate Prisma client
-        run: pnpm --filter @arbitrage/web prisma generate
+        run: cd apps/web && npx prisma generate
 
       - name: Run tests with coverage
         run: pnpm test:coverage --force
