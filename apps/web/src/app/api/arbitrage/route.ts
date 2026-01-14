@@ -37,7 +37,8 @@ export async function GET(request: NextRequest) {
       where.profitMargin = { gte: parseFloat(minProfitMargin) };
     }
 
-    if (status && Object.values(OpportunityStatus).includes(status as OpportunityStatus)) {
+    const validStatuses = ['ACTIVE', 'EXPIRED', 'PURCHASED', 'SOLD', 'DISMISSED'];
+    if (status && validStatuses.includes(status)) {
       where.status = status as OpportunityStatus;
     }
 
