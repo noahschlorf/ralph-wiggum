@@ -59,7 +59,7 @@ jobs:
         run: pnpm --filter @arbitrage/web prisma generate
 
       - name: Run type checking
-        run: pnpm type-check
+        run: pnpm type-check --force
 
   test:
     name: Test
@@ -87,7 +87,7 @@ jobs:
         run: pnpm --filter @arbitrage/web prisma generate
 
       - name: Run tests with coverage
-        run: pnpm test:coverage
+        run: pnpm test:coverage --force
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
