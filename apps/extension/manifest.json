@@ -1,0 +1,70 @@
+{
+  "manifest_version": 3,
+  "name": "Marketplace Arbitrage",
+  "version": "1.0.0",
+  "description": "Find arbitrage opportunities across eBay, Facebook Marketplace, Craigslist, OfferUp, Mercari, Poshmark, and Amazon",
+  "permissions": [
+    "storage",
+    "alarms",
+    "notifications"
+  ],
+  "host_permissions": [
+    "https://www.ebay.com/*",
+    "https://www.facebook.com/marketplace/*",
+    "https://craigslist.org/*",
+    "https://*.craigslist.org/*",
+    "https://offerup.com/*",
+    "https://www.mercari.com/*",
+    "https://poshmark.com/*",
+    "https://www.amazon.com/*"
+  ],
+  "background": {
+    "service_worker": "src/background/index.ts",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.ebay.com/*"],
+      "js": ["src/content/ebay.ts"]
+    },
+    {
+      "matches": ["https://www.facebook.com/marketplace/*"],
+      "js": ["src/content/facebook.ts"]
+    },
+    {
+      "matches": ["https://*.craigslist.org/*"],
+      "js": ["src/content/craigslist.ts"]
+    },
+    {
+      "matches": ["https://offerup.com/*"],
+      "js": ["src/content/offerup.ts"]
+    },
+    {
+      "matches": ["https://www.mercari.com/*"],
+      "js": ["src/content/mercari.ts"]
+    },
+    {
+      "matches": ["https://poshmark.com/*"],
+      "js": ["src/content/poshmark.ts"]
+    },
+    {
+      "matches": ["https://www.amazon.com/*"],
+      "js": ["src/content/amazon.ts"]
+    }
+  ],
+  "action": {
+    "default_popup": "src/popup/index.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
