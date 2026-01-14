@@ -185,6 +185,91 @@ describe('EbayClient', () => {
         })
       );
     });
+
+    it('should apply min-only price filter', async () => {
+      const mockSearchResult = { itemSummaries: [], total: 0 };
+      const mockSearch = vi.fn().mockResolvedValue(mockSearchResult);
+      (client as any).api.buy.browse.search = mockSearch;
+
+      await client.search({ query: 'camera', minPrice: 100 });
+
+      expect(mockSearch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          filter: expect.stringContaining('[100..]'),
+        })
+      );
+    });
+
+    it('should apply max-only price filter', async () => {
+      const mockSearchResult = { itemSummaries: [], total: 0 };
+      const mockSearch = vi.fn().mockResolvedValue(mockSearchResult);
+      (client as any).api.buy.browse.search = mockSearch;
+
+      await client.search({ query: 'camera', maxPrice: 500 });
+
+      expect(mockSearch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          filter: expect.stringContaining('[..500]'),
+        })
+      );
+    });
+
+    it('should apply category filter', async () => {
+      const mockSearchResult = { itemSummaries: [], total: 0 };
+      const mockSearch = vi.fn().mockResolvedValue(mockSearchResult);
+      (client as any).api.buy.browse.search = mockSearch;
+
+      await client.search({ query: 'phone', categoryId: '9355' });
+
+      expect(mockSearch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          filter: expect.stringContaining('categoryId:9355'),
+        })
+      );
+    });
+
+    it('should apply condition filter', async () => {
+      const mockSearchResult = { itemSummaries: [], total: 0 };
+      const mockSearch = vi.fn().mockResolvedValue(mockSearchResult);
+      (client as any).api.buy.browse.search = mockSearch;
+
+      await client.search({ query: 'laptop', condition: ['NEW', 'LIKE_NEW'] });
+
+      expect(mockSearch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          filter: expect.stringContaining('conditions:{NEW|LIKE_NEW}'),
+        })
+      );
+    });
+
+    it('should apply sort parameter', async () => {
+      const mockSearchResult = { itemSummaries: [], total: 0 };
+      const mockSearch = vi.fn().mockResolvedValue(mockSearchResult);
+      (client as any).api.buy.browse.search = mockSearch;
+
+      await client.search({ query: 'collectibles', sort: 'price' });
+
+      expect(mockSearch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sort: 'price',
+        })
+      );
+    });
+
+    it('should calculate hasMore correctly when more items exist', async () => {
+      const mockSearchResult = {
+        itemSummaries: [{ itemId: 'v1|1|0', title: 'Item 1', price: { value: '10.00' }, itemWebUrl: 'https://ebay.com/1' }],
+        total: 100,
+        offset: 0,
+        limit: 10,
+      };
+      const mockSearch = vi.fn().mockResolvedValue(mockSearchResult);
+      (client as any).api.buy.browse.search = mockSearch;
+
+      const result = await client.search({ query: 'test' });
+
+      expect(result.hasMore).toBe(true);
+    });
   });
 
   describe('normalizeItem', () => {
@@ -268,6 +353,23 @@ describe('EbayClient', () => {
         const result = (client as any).mapCondition(input);
         expect(result).toBe(expected);
       });
+    });
+
+    it('should return undefined for unknown condition', () => {
+      const result = (client as any).mapCondition('Some Unknown Condition');
+      expect(result).toBeUndefined();
+    });
+  });
+
+  describe('buildPriceFilter', () => {
+    it('should return null when no price filters provided', () => {
+      const result = (client as any).buildPriceFilter(undefined, undefined);
+      expect(result).toBeNull();
+    });
+
+    it('should build filter for both min and max price', () => {
+      const result = (client as any).buildPriceFilter(100, 500);
+      expect(result).toBe('price:[100..500],priceCurrency:USD');
     });
   });
 

@@ -166,6 +166,97 @@ describe('KeepaClient', () => {
 
       expect(result.priceHistory).toEqual([]);
     });
+
+    it('should parse valid price history and calculate statistics', async () => {
+      const mockResponse = {
+        products: [
+          {
+            asin: 'B09V3KXJPB',
+            title: 'Test Product',
+            csv: [[21564000, 10000, 21564001, 20000, 21564002, 15000]], // timestamps and prices in cents
+          },
+        ],
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockResponse),
+      });
+
+      const result = await client.getPriceHistory('B09V3KXJPB');
+
+      expect(result.priceHistory.length).toBe(3);
+      expect(result.currentPrice).toBe(150); // last valid price
+      expect(result.lowestPrice).toBe(100);
+      expect(result.highestPrice).toBe(200);
+      expect(result.averagePrice).toBe(150);
+    });
+
+    it('should skip invalid data types in price history', async () => {
+      const mockResponse = {
+        products: [
+          {
+            asin: 'B09V3KXJPB',
+            title: 'Test Product',
+            csv: [[21564000, 10000, 'invalid', 20000, 21564002, null]], // invalid types
+          },
+        ],
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockResponse),
+      });
+
+      const result = await client.getPriceHistory('B09V3KXJPB');
+
+      expect(result.priceHistory.length).toBe(1); // Only first valid pair
+    });
+
+    it('should handle empty csv array', async () => {
+      const mockResponse = {
+        products: [
+          {
+            asin: 'B09V3KXJPB',
+            title: 'Test Product',
+            csv: [],
+          },
+        ],
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockResponse),
+      });
+
+      const result = await client.getPriceHistory('B09V3KXJPB');
+
+      expect(result.priceHistory).toEqual([]);
+      expect(result.lowestPrice).toBeUndefined();
+      expect(result.highestPrice).toBeUndefined();
+      expect(result.averagePrice).toBeUndefined();
+    });
+
+    it('should handle csv with invalid first element', async () => {
+      const mockResponse = {
+        products: [
+          {
+            asin: 'B09V3KXJPB',
+            title: 'Test Product',
+            csv: [null], // first element is not an array
+          },
+        ],
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockResponse),
+      });
+
+      const result = await client.getPriceHistory('B09V3KXJPB');
+
+      expect(result.priceHistory).toEqual([]);
+    });
   });
 
   describe('getQuotaStatus', () => {
@@ -186,6 +277,99 @@ describe('KeepaClient', () => {
 
       expect(result.tokensLeft).toBe(50);
       expect(result.refillIn).toBe(180000);
+    });
+
+    it('should handle missing refillRate', async () => {
+      const mockResponse = {
+        tokensLeft: 50,
+        refillIn: 180000,
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockResponse),
+      });
+
+      const result = await client.getQuotaStatus();
+
+      expect(result.refillRate).toBe(5); // Default value
+    });
+
+    it('should handle API errors', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+      });
+
+      await expect(client.getQuotaStatus()).rejects.toThrow();
+    });
+  });
+
+  describe('searchProducts', () => {
+    it('should search products by keyword', async () => {
+      // First call returns ASINs
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ asinList: ['B001', 'B002', 'B003'] }),
+      });
+
+      // Second call returns product details
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({
+          products: [
+            { asin: 'B001', title: 'Product 1' },
+            { asin: 'B002', title: 'Product 2' },
+            { asin: 'B003', title: 'Product 3' },
+          ],
+        }),
+      });
+
+      const result = await client.searchProducts('iphone');
+
+      expect(result).toHaveLength(3);
+      expect(result[0].asin).toBe('B001');
+    });
+
+    it('should limit results to specified amount', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ asinList: ['B001', 'B002', 'B003', 'B004', 'B005'] }),
+      });
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({
+          products: [
+            { asin: 'B001', title: 'Product 1' },
+            { asin: 'B002', title: 'Product 2' },
+          ],
+        }),
+      });
+
+      const result = await client.searchProducts('laptop', 2);
+
+      expect(result).toHaveLength(2);
+    });
+
+    it('should handle empty search results', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ asinList: [] }),
+      });
+
+      const result = await client.searchProducts('nonexistent12345');
+
+      expect(result).toHaveLength(0);
+    });
+
+    it('should handle search API errors', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 429,
+      });
+
+      await expect(client.searchProducts('test')).rejects.toThrow();
     });
   });
 });
