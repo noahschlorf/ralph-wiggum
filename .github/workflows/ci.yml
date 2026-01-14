@@ -116,6 +116,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Generate Prisma client
+        run: cd apps/web && npx prisma generate
+
       - name: Build all packages
         run: pnpm build
 
@@ -147,6 +150,9 @@ jobs:
 
       - name: Install Playwright browsers
         run: pnpm --filter @arbitrage/web exec playwright install --with-deps
+
+      - name: Generate Prisma client
+        run: cd apps/web && npx prisma generate
 
       - name: Build
         run: pnpm build
